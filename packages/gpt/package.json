@@ -1,0 +1,29 @@
+{
+  "name": "@rentroll-ai/gpt",
+  "version": "1.0.0",
+  "description": "OpenAI wrapper and prompt templates for RentRoll AI",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@rentroll-ai/shared": "workspace:*",
+    "openai": "^4.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.44.0",
+    "jest": "^29.6.0",
+    "typescript": "^5.1.0"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@rentroll-ai/pricing",
+  "version": "1.0.0",
+  "description": "Dynamic pricing engine for rental properties",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --ext .ts",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.22.0",
+    "@rentroll-ai/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.1.0",
+    "eslint": "^8.44.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "jest": "^29.6.0",
+    "@types/jest": "^29.5.0"
+  }
+} 
