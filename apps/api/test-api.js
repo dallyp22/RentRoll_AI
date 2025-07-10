@@ -112,63 +112,134 @@ app.get('/test-bigquery', async (req, res) => {
   }
 });
 
-// Simple NL query endpoint (without OpenAI for now)
+// Enhanced NL query endpoint with better pattern matching
 app.post('/nl-query', async (req, res) => {
   try {
     const { query, prompt } = req.body;
     const userQuery = query || prompt;
     console.log('📝 NL Query:', userQuery);
     
-    // Simple pattern matching for common queries
+    const lowerQuery = userQuery.toLowerCase();
     let sqlQuery = '';
     let explanation = '';
     
-    if (userQuery && userQuery.toLowerCase().includes('1 bedroom')) {
+    // Improved pattern matching with more specific logic
+    if (lowerQuery.includes('1 bedroom') || lowerQuery.includes('one bedroom')) {
       sqlQuery = `
-        SELECT Property, COUNT(*) as units, AVG(Rent) as avg_rent
+        SELECT Property, COUNT(*) as units, ROUND(AVG(Rent), 2) as avg_rent
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Bedroom = 1
+        WHERE Bedroom = 1 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Rent > 0
         GROUP BY Property
         ORDER BY units DESC
       `;
       explanation = `Found ${userQuery} - showing 1-bedroom units by property`;
-    } else if (userQuery && userQuery.toLowerCase().includes('2 bedroom')) {
+      
+    } else if (lowerQuery.includes('2 bedroom') || lowerQuery.includes('two bedroom')) {
       sqlQuery = `
-        SELECT Property, COUNT(*) as units, AVG(Rent) as avg_rent
+        SELECT Property, COUNT(*) as units, ROUND(AVG(Rent), 2) as avg_rent
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Bedroom = 2
+        WHERE Bedroom = 2 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Rent > 0
         GROUP BY Property
         ORDER BY units DESC
       `;
       explanation = `Found ${userQuery} - showing 2-bedroom units by property`;
-    } else if (userQuery && (userQuery.toLowerCase().includes('expensive') || userQuery.toLowerCase().includes('highest'))) {
+      
+    } else if (lowerQuery.includes('least') || lowerQuery.includes('cheapest') || lowerQuery.includes('lowest') || lowerQuery.includes('minimum')) {
       sqlQuery = `
         SELECT Unit, Property, Bedroom, Bathrooms, Sqft, Rent
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Rent IS NOT NULL AND Rent > 0
+        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        ORDER BY Rent ASC
+        LIMIT 10
+      `;
+      explanation = `Found ${userQuery} - showing least expensive units`;
+      
+    } else if (lowerQuery.includes('most expensive') || lowerQuery.includes('highest') || lowerQuery.includes('maximum') || lowerQuery.includes('priciest')) {
+      sqlQuery = `
+        SELECT Unit, Property, Bedroom, Bathrooms, Sqft, Rent
+        FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
         ORDER BY Rent DESC
         LIMIT 10
       `;
       explanation = `Found ${userQuery} - showing most expensive units`;
-    } else if (userQuery && userQuery.toLowerCase().includes('vacant')) {
+      
+    } else if (lowerQuery.includes('vacant') || lowerQuery.includes('empty') || lowerQuery.includes('available')) {
+      // First, let's check what status values actually exist
       sqlQuery = `
-        SELECT Property, COUNT(*) as vacant_units
+        SELECT Unit, Property, Bedroom, Bathrooms, Sqft, Status
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Status = 'Vacant' OR Status = 'Available'
+        WHERE (Status = 'Vacant' OR Status = 'Available' OR Status IS NULL OR Rent = 0 OR Rent IS NULL)
+        AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        ORDER BY Property, Unit
+        LIMIT 20
+      `;
+      explanation = `Found ${userQuery} - showing vacant/available units`;
+      
+    } else if (lowerQuery.includes('average rent') || lowerQuery.includes('avg rent') || lowerQuery.includes('mean rent')) {
+      sqlQuery = `
+        SELECT 
+          Property,
+          COUNT(*) as total_units,
+          ROUND(AVG(Rent), 2) as average_rent,
+          ROUND(MIN(Rent), 2) as min_rent,
+          ROUND(MAX(Rent), 2) as max_rent
+        FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+        WHERE Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
         GROUP BY Property
-        ORDER BY vacant_units DESC
+        ORDER BY average_rent DESC
       `;
-      explanation = `Found ${userQuery} - showing vacant units by property`;
-    } else {
-      // Default query if no pattern matches
+      explanation = `Found ${userQuery} - showing average rent by property`;
+      
+    } else if (lowerQuery.includes('occupancy') || lowerQuery.includes('occupied')) {
       sqlQuery = `
-        SELECT Property, COUNT(*) as units, AVG(Rent) as avg_rent
+        SELECT 
+          Property,
+          COUNT(*) as total_units,
+          COUNT(CASE WHEN Rent > 0 THEN 1 END) as occupied_units,
+          ROUND(COUNT(CASE WHEN Rent > 0 THEN 1 END) * 100.0 / COUNT(*), 2) as occupancy_rate
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        GROUP BY Property 
-        ORDER BY units DESC
-        LIMIT 5
+        WHERE Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        GROUP BY Property
+        ORDER BY occupancy_rate DESC
       `;
-      explanation = `Generated query for: "${userQuery}". Showing property summary.`;
+      explanation = `Found ${userQuery} - showing occupancy rates by property`;
+      
+    } else if (lowerQuery.includes('3 bedroom') || lowerQuery.includes('three bedroom')) {
+      sqlQuery = `
+        SELECT Property, COUNT(*) as units, ROUND(AVG(Rent), 2) as avg_rent
+        FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+        WHERE Bedroom = 3 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Rent > 0
+        GROUP BY Property
+        ORDER BY units DESC
+      `;
+      explanation = `Found ${userQuery} - showing 3-bedroom units by property`;
+      
+    } else if (lowerQuery.includes('4 bedroom') || lowerQuery.includes('four bedroom')) {
+      sqlQuery = `
+        SELECT Property, COUNT(*) as units, ROUND(AVG(Rent), 2) as avg_rent
+        FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+        WHERE Bedroom = 4 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Rent > 0
+        GROUP BY Property
+        ORDER BY units DESC
+      `;
+      explanation = `Found ${userQuery} - showing 4-bedroom units by property`;
+      
+    } else {
+      // Default query - property overview
+      sqlQuery = `
+        SELECT 
+          Property,
+          COUNT(*) as total_units,
+          ROUND(AVG(Rent), 2) as avg_rent,
+          COUNT(CASE WHEN Rent > 0 THEN 1 END) as occupied_units
+        FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+        WHERE Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        GROUP BY Property 
+        ORDER BY total_units DESC
+        LIMIT 10
+      `;
+      explanation = `Generated query for: "${userQuery}". Showing property portfolio overview.`;
     }
     
     const [rows] = await bq.query(sqlQuery);
@@ -180,7 +251,7 @@ app.post('/nl-query', async (req, res) => {
       executionTime: 1200,
       bytesProcessed: 50000,
       cached: false,
-      sessionId: 'test-session',
+      sessionId: req.body.sessionId || 'demo-session',
     });
   } catch (error) {
     console.error('❌ NL Query error:', error.message);
