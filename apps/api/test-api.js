@@ -311,6 +311,76 @@ app.get('/units/by-property', async (req, res) => {
   }
 });
 
+// Occupancy endpoint for Dashboard
+app.get('/occupancy', async (req, res) => {
+  try {
+    console.log('📊 Fetching occupancy stats...');
+    const query = `
+      SELECT 
+        COUNT(*) as total_units,
+        COUNT(CASE WHEN Status = 'Occupied' THEN 1 END) as occupied_units,
+        COUNT(CASE WHEN Status = 'Vacant' THEN 1 END) as vacant_units,
+        ROUND(COUNT(CASE WHEN Status = 'Occupied' THEN 1 END) * 100.0 / COUNT(*), 2) as occupancy_rate,
+        ROUND(AVG(Rent), 2) as avg_rent
+      FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+      WHERE Rent > 0
+    `;
+    
+    const [rows] = await bq.query(query);
+    const stats = rows[0];
+    
+    res.json({
+      status: 'success',
+      data: {
+        total_units: parseInt(stats.total_units),
+        occupied_units: parseInt(stats.occupied_units),
+        occupancy_rate: parseFloat(stats.occupancy_rate),
+        avg_rent: parseFloat(stats.avg_rent)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Occupancy query error:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+});
+
+// Properties endpoint
+app.get('/properties', async (req, res) => {
+  try {
+    console.log('🏢 Fetching properties data...');
+    const query = `
+      SELECT 
+        Property,
+        COUNT(*) as total_units,
+        COUNT(CASE WHEN Status = 'Occupied' THEN 1 END) as occupied_units,
+        ROUND(AVG(Rent), 2) as avg_rent,
+        ROUND(AVG(COALESCE(Market_Rent, Rent * 1.05)), 2) as avg_market_rent
+      FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
+      WHERE Rent > 0
+      GROUP BY Property
+      ORDER BY total_units DESC
+      LIMIT 10
+    `;
+    
+    const [rows] = await bq.query(query);
+    
+    res.json({
+      status: 'success',
+      data: rows,
+      count: rows.length,
+    });
+  } catch (error) {
+    console.error('❌ Properties query error:', error.message);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+    });
+  }
+});
+
 // Start server
 app.listen(port, () => {
   console.log(`🎉 RentRoll AI Test API running on http://localhost:${port}`);
