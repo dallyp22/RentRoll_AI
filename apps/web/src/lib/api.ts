@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-// Use environment variable in production, fallback to localhost in development
+// Use environment variable in production, fallback to Railway URL, then localhost in development
 const baseURL = import.meta.env.VITE_API_URL || 
-                 (import.meta.env.PROD ? 'https://your-railway-app.up.railway.app' : 'http://localhost:4000')
+                 (import.meta.env.PROD ? 'https://rentrollai-production.up.railway.app' : 'http://localhost:4000')
 
 export const api = axios.create({
   baseURL,
