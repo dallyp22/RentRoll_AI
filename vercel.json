@@ -18,6 +18,6 @@
       "dest": "/apps/web/dist/index.html"
     }
   ],
-  "installCommand": "cd apps/web && npm install --legacy-peer-deps",
+  "installCommand": "cd apps/web && npm install --force",
   "buildCommand": "cd apps/web && npm run build"
 } 
