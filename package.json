@@ -1,12 +1,9 @@
 {
-  "name": "rentroll-ai",
+  "name": "@rentroll-ai/root",
   "version": "1.0.0",
-  "description": "AI-powered property management and dynamic pricing platform",
+  "description": "RentRoll AI - Root Package",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "packageManager": "pnpm@8.15.0",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -17,9 +14,8 @@
   "devDependencies": {
     "turbo": "^1.10.0"
   },
-  "packageManager": "pnpm@8.6.0",
-  "engines": {
-    "node": ">=18.0.0",
-    "pnpm": ">=8.0.0"
-  }
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 } 
