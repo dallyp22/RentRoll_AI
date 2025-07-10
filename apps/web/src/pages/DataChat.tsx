@@ -12,6 +12,7 @@ import {
   Zap
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { nlQuery } from '../lib/api'
 
 interface ChatMessage {
   id: string
@@ -58,21 +59,8 @@ export default function DataChat() {
 
   const queryMutation = useMutation({
     mutationFn: async (query: string) => {
-      const response = await fetch('/api/nl-query', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          prompt: query,
-          sessionId: 'demo-session',
-          includeExplanation: true
-        }),
-      })
-      if (!response.ok) {
-        throw new Error('Failed to process query')
-      }
-      return response.json()
+      // Use the nlQuery function from api.ts instead of raw fetch
+      return nlQuery(query, 'demo-session')
     },
     onSuccess: (response) => {
       // Remove loading message and add response
