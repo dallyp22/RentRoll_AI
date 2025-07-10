@@ -1,13 +1,13 @@
-require('dotenv').config({ path: '../../.env' });
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { BigQuery } = require('@google-cloud/bigquery');
 
-console.log('🚀 Starting RentRoll AI Test API...');
+console.log('🚀 Starting RentRoll AI API for Railway...');
 console.log('Environment check:');
 console.log('- OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Found' : 'Missing');
 console.log('- BQ Project:', process.env.BQ_PROJECT);
-console.log('- Key file:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
+console.log('- Node ENV:', process.env.NODE_ENV);
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -16,6 +16,7 @@ const port = process.env.PORT || 4000;
 let bq;
 if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   // Production: Use JSON credentials from environment variable
+  console.log('🔑 Using JSON credentials from environment variable');
   const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
   bq = new BigQuery({
     projectId: process.env.BQ_PROJECT,
@@ -23,6 +24,7 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
   });
 } else {
   // Development: Use credentials file
+  console.log('🔑 Using credentials file');
   bq = new BigQuery({
     projectId: process.env.BQ_PROJECT,
     keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
