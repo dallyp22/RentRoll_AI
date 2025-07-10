@@ -318,12 +318,12 @@ app.get('/occupancy', async (req, res) => {
     const query = `
       SELECT 
         COUNT(*) as total_units,
-        COUNT(CASE WHEN Status = 'Occupied' THEN 1 END) as occupied_units,
-        COUNT(CASE WHEN Status = 'Vacant' THEN 1 END) as vacant_units,
-        ROUND(COUNT(CASE WHEN Status = 'Occupied' THEN 1 END) * 100.0 / COUNT(*), 2) as occupancy_rate,
+        COUNT(CASE WHEN Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' THEN 1 END) as occupied_units,
+        COUNT(CASE WHEN Status = 'Vacant' OR Status = 'Available' THEN 1 END) as vacant_units,
+        ROUND(COUNT(CASE WHEN Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' THEN 1 END) * 100.0 / COUNT(*), 2) as occupancy_rate,
         ROUND(AVG(Rent), 2) as avg_rent
       FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-      WHERE Rent > 0
+      WHERE Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
     `;
     
     const [rows] = await bq.query(query);
