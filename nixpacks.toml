@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm"]
+
+[phases.install]
+cmds = ["cd apps/api && npm install"]
+
+[phases.build]
+cmds = ["echo 'No build step needed'"]
+
+[start]
+cmd = "cd apps/api && npm start" 
