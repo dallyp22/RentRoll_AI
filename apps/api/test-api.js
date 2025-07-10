@@ -33,13 +33,27 @@ if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
 
 // CORS configuration for production
 const corsOptions = {
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000', 
-    'https://*.vercel.app',
-    'https://*.up.railway.app',
-    process.env.FRONTEND_URL
-  ].filter(Boolean),
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      process.env.FRONTEND_URL
+    ].filter(Boolean);
+    
+    // Allow all Vercel preview and production URLs
+    if (origin.includes('.vercel.app') || 
+        origin.includes('vercel.app') ||
+        origin.includes('.up.railway.app') ||
+        allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   optionsSuccessStatus: 200
 };
