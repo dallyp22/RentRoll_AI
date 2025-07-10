@@ -144,21 +144,21 @@ app.post('/nl-query', async (req, res) => {
       `;
       explanation = `Found ${userQuery} - showing 2-bedroom units by property`;
       
-    } else if (lowerQuery.includes('least') || lowerQuery.includes('cheapest') || lowerQuery.includes('lowest') || lowerQuery.includes('minimum')) {
+    } else if (lowerQuery.includes('least') || lowerQuery.includes('cheapest') || lowerQuery.includes('lowest') || lowerQuery.includes('minimum') || (lowerQuery.includes('expensive') && lowerQuery.includes('least'))) {
       sqlQuery = `
         SELECT Unit, Property, Bedroom, Bathrooms, Sqft, Rent
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Unit NOT LIKE 'Total%'
         ORDER BY Rent ASC
         LIMIT 10
       `;
       explanation = `Found ${userQuery} - showing least expensive units`;
       
-    } else if (lowerQuery.includes('most expensive') || lowerQuery.includes('highest') || lowerQuery.includes('maximum') || lowerQuery.includes('priciest')) {
+    } else if (lowerQuery.includes('most expensive') || lowerQuery.includes('highest') || lowerQuery.includes('maximum') || lowerQuery.includes('priciest') || (lowerQuery.includes('expensive') && !lowerQuery.includes('least'))) {
       sqlQuery = `
         SELECT Unit, Property, Bedroom, Bathrooms, Sqft, Rent
         FROM \`${process.env.BQ_PROJECT}.rentroll.Update_7_8_native\`
-        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%'
+        WHERE Rent IS NOT NULL AND Rent > 0 AND Unit IS NOT NULL AND Unit NOT LIKE '%Total%' AND Unit NOT LIKE 'Total%'
         ORDER BY Rent DESC
         LIMIT 10
       `;
