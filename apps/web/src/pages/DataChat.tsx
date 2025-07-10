@@ -62,7 +62,7 @@ export default function DataChat() {
       // Use the nlQuery function from api.ts instead of raw fetch
       return nlQuery(query, 'demo-session')
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       // The axios interceptor already unwraps response.data, so 'data' is the actual response
       setMessages(prev => [
         ...prev.filter(msg => !msg.loading),
@@ -77,10 +77,10 @@ export default function DataChat() {
       setIsComposing(false)
       toast.success('Query processed successfully!')
     },
-    onError: (error) => {
+    onError: (error: any) => {
       setMessages(prev => prev.filter(msg => !msg.loading))
       setIsComposing(false)
-      toast.error(`Failed to process query: ${error.message}`)
+      toast.error(`Failed to process query: ${error.message || 'Unknown error'}`)
     },
   })
 
